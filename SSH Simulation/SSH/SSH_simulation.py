@@ -143,6 +143,16 @@ def SSH_sim(c1,c2,L,m,n):
 
 # Plot the impedance vs frequency graph of the circuit
 def plott(c1, c2, n1, n2,k,steps = 1,):
+    """This function plots the impedance vs frequency graph of the circuit
+
+    Args:
+        c1 (float): The capacitance of the first capacitor
+        c2 (float): The capacitance of the second capacitor
+        n1 (Int): the first node
+        n2 (int): the second node
+        k (int): the number of unit cells
+        steps (int, optional): _description_. Defaults to 1.
+    """
     x = []
     y = []
 
@@ -152,7 +162,7 @@ def plott(c1, c2, n1, n2,k,steps = 1,):
         y.append(impedance(n1,n2,SSH_sim(c1*10**(-6),c2*10**(-6),10**(-5),i,k)))
         i += 1
     plt.figure(figsize=(8, 6))
-    plt.plot(x, y, label=f't={c1}/{c2},n={n1}-{n2},s={steps}')
+    plt.plot(x, y, label=f'n={n1}-{n2},s={steps}')
     
 
     plt.yscale('log')
