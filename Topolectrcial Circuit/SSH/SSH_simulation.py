@@ -50,6 +50,53 @@ def SSH(n, diag, alternate1, alternate2):
     return matrix
 
 
+
+# Define the Hamiltonian of the Circuit
+def SSH_sim(c1,c2,L,m,n):
+    """This function generated the Laplacian of the circuit
+
+    Args:
+        c1 (float): first capacitor
+        c2 (float): 2nd capacitor
+        L (float): inductor
+        m (float): angular frequency
+        n (int): size of the matrix
+
+    Raises:
+        ValueError: Size of the matrix must be at least 2x2.
+        ValueError: Size of the matrix must be even for alternating diagonals.
+
+    Returns:
+        array: the laplacian (Hamiltonian) of the circuit
+    """
+    if n < 2:
+        raise ValueError("The size of the matrix must be at least 2x2.")
+
+    if n % 2 != 0:
+        raise ValueError("The size of the matrix must be even for alternating diagonals.")
+
+    matrix = np.zeros((n, n))
+    m1 = 2*(math.pi)*m
+    t = c1/c2  # t is intra cell hopping 
+    w = (1/(L*(c1+c2)))**0.5 # w is the resonance frequency of the SSH model
+    for i in range(n):
+        matrix[i, i] =  (1+t)*(1-(w/m1)**2) # Main diagonal
+
+        if i < n - 1:
+            if i % 2 == 0:
+                matrix[i, i + 1] = -t  # Alternate upper diagonal
+            else:
+                matrix[i, i + 1] = -1  # Alternate upper diagonal
+
+        if i > 0:
+            if i % 2 == 0:
+                matrix[i, i - 1] = -1 # Alternate lower diagonal
+            else:
+                matrix[i, i - 1] = -t  # Alternate lower diagonal
+
+    return matrix
+
+
 # Calculate the Impedance between any two nodes in the SSH circuit at resonance
 def impedance(a,b,M):
     """This function calculates the impedance between any two nodes in the SSH circuit at resonance.
@@ -96,51 +143,6 @@ def resonance(m1,m2,L):
     return f,w
 
 
-# Define the Hamiltonian of the Circuit
-def SSH_sim(c1,c2,L,m,n):
-    """The function geneerates the SSH model and calculates the impedance between two nodes of the SSH model
-
-  Args:
-      c1 (float): Capacitance of the first capacitor
-      c2 (float): Capacitance of the second capacitor
-      m (float): m is the given frequency
-      n1 (int): n1 is the first node
-      n2 (int): n2 is the second node
-    Raises:
-        ValueError: size of the Hamiltonian must be at least 2x2.
-        ValueError: size of the Hamiltonian must be even for alternating diagonals.
-
-    Returns:
-       array: The generated Hamiltonian.
-    """
-    if n < 2:
-        raise ValueError("The size of the matrix must be at least 2x2.")
-
-    if n % 2 != 0:
-        raise ValueError("The size of the matrix must be even for alternating diagonals.")
-
-    matrix = np.zeros((n, n))
-    m1 = 2*(math.pi)*m
-    t = c1/c2  # t is intra cell hopping 
-    w = (1/(L*(c1+c2)))**0.5 # w is the resonance frequency of the SSH model
-    for i in range(n):
-        matrix[i, i] =  (1+t)*(1-(w/m1)**2) # Main diagonal
-
-        if i < n - 1:
-            if i % 2 == 0:
-                matrix[i, i + 1] = -t  # Alternate upper diagonal
-            else:
-                matrix[i, i + 1] = -1  # Alternate upper diagonal
-
-        if i > 0:
-            if i % 2 == 0:
-                matrix[i, i - 1] = -1 # Alternate lower diagonal
-            else:
-                matrix[i, i - 1] = -t  # Alternate lower diagonal
-
-    return matrix
-
-
 # Plot the impedance vs frequency graph of the circuit
 def plott(c1, c2, n1, n2,k,steps = 1,):
     """This function plots the impedance vs frequency graph of the circuit
@@ -153,6 +155,8 @@ def plott(c1, c2, n1, n2,k,steps = 1,):
         k (int): the number of unit cells
         steps (int, optional): _description_. Defaults to 1.
     """
+    t = c1/c2
+    t = round(t,2)
     x = []
     y = []
 
@@ -162,7 +166,7 @@ def plott(c1, c2, n1, n2,k,steps = 1,):
         y.append(impedance(n1,n2,SSH_sim(c1*10**(-6),c2*10**(-6),10**(-5),i,k)))
         i += 1
     plt.figure(figsize=(8, 6))
-    plt.plot(x, y, label=f'n={n1}-{n2},s={steps}')
+    plt.plot(x, y, label=f't = {t}, n={n1} - {n2},s={steps}')
     
 
     plt.yscale('log')
@@ -170,6 +174,7 @@ def plott(c1, c2, n1, n2,k,steps = 1,):
     plt.ylim(10**0, 10**6)  
     plt.xlabel('Angular Frequency(Hz)')
     plt.ylabel('Impedance(ohm)')
+    print(resonance(c1*10**(-6),c2*10**(-6),10**(-5))[0])
     plt.title('Impedance vs Angular Frequency')
     plt.legend()
     plt.show()
